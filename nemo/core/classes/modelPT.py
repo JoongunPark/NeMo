@@ -1882,13 +1882,6 @@ class ModelPT(LightningModule, Model):
                         logging.info(f"====== Start chakra profiling global_step {self.trainer.global_step} ======")
                         self._et.register_callback(f"{self._chakra_profile_trace_dir}/et_{get_rank()}.json")
                         self._prof.start()
-                        pg_config_info = (
-                            torch.distributed.distributed_c10d._world.pg_config_info
-                        )
-                        rf_handle = torch.autograd._record_function_with_args_enter(
-                            "## process_group:init ##", json.dumps(pg_config_info)
-                        )
-                        torch.autograd._record_function_with_args_exit(rf_handle)
                         self._chakra_profile_start = True
 
             if hasattr(self, '_nsys_profile_enabled'):
@@ -1941,6 +1934,13 @@ class ModelPT(LightningModule, Model):
                 if self._chakra_profile_enabled and not self._chakra_profile_complete and self._chakra_profile_start:
                     if self.trainer.global_step-1 >= self._chakra_profile_end_step :
                         logging.info(f"====== End chakra profiling global_step {self.trainer.global_step} ======")
+                        pg_config_info = (
+                            torch.distributed.distributed_c10d._world.pg_config_info
+                        )
+                        rf_handle = torch.autograd._record_function_with_args_enter(
+                            "## process_group:init ##", json.dumps(pg_config_info)
+                        )
+                        torch.autograd._record_function_with_args_exit(rf_handle)
                         self._prof.stop()
                         self._prof.export_chrome_trace(f"{self._chakra_profile_trace_dir}/kineto_{get_rank()}.json")
                         self._et.unregister_callback()
