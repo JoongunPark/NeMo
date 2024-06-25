@@ -37,7 +37,7 @@ except (ImportError, ModuleNotFoundError):
 
     HAVE_MEGATRON_CORE = False
 
-from torch.profiler import ExecutionTraceObserver
+from torch.profiler import ExecutionTraceObserver, _ExperimentalConfig
 from omegaconf import DictConfig, OmegaConf, open_dict
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.utilities import model_summary, rank_zero_only
@@ -1765,7 +1765,7 @@ class ModelPT(LightningModule, Model):
                     raise ValueError(f'chakra end_step must be greater than or equal to chakra start_step')
 
                 self._et = ExecutionTraceObserver()
-                self._prof = torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU,torch.profiler.ProfilerActivity.CUDA,],schedule=torch.profiler.schedule(wait=0,warmup=warmup_steps,active=active_steps),record_shapes=True,execution_trace_observer=self._et)
+                self._prof = torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU,torch.profiler.ProfilerActivity.CUDA,],schedule=torch.profiler.schedule(wait=0,warmup=warmup_steps,active=active_steps),record_shapes=True,execution_trace_observer=self._et,experimental_config=_ExperimentalConfig(enable_cuda_sync_events=True))
 
     def _setup_profiling(self):
         """Enables nsys profiling
